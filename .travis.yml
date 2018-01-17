@@ -19,7 +19,7 @@ before_install:
   - docker pull elgalu/selenium
   - docker run -d --name=grid -p 4444:24444 -p 5900:25900 -e TZ="Europe/Berlin" -v /dev/shm:/dev/shm --privileged elgalu/selenium
   - docker exec grid wait_all_done 30s
-  - ./build/tools/composer clear-cache
+  - composer clear-cache
   - composer install
   - vendor/bin/codecept build
 
