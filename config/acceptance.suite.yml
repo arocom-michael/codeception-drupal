@@ -1,0 +1,38 @@
+actor: AcceptanceTester
+modules:
+    enabled:
+        - WebDriver
+        - Asserts
+        - \Helper\Acceptance
+        - \Codeception\Module\Context\MinkContext
+        - \Codeception\Module\Context\AcceptanceContext
+        - \Codeception\Module\Context\BatchContext
+        - \Codeception\Module\Context\MarkupContext
+        - \Codeception\Module\Context\DrushContext
+        - DrupalDrush
+    config:
+        WebDriver:
+            url: 'https://www.drupal.org'
+            browser: chrome
+            host: '127.0.0.1'
+            port: 4444
+            window_size: 1920x1080
+        \Codeception\Module\Context\MinkContext:
+            DI: 'WebDriver'
+            PSR-7: '\GuzzleHttp\Client'
+        \Codeception\Module\Context\AcceptanceContext:
+            DI: 'WebDriver'
+            PSR-7: '\GuzzleHttp\Client'
+        \Codeception\Module\Context\BatchContext:
+            DI: 'WebDriver'
+            PSR-7: '\GuzzleHttp\Client'
+        \Codeception\Module\Context\MarkupContext:
+            DI: 'WebDriver'
+            PSR-7: '\GuzzleHttp\Client'
+        \Codeception\Module\Context\DrushContext:
+            DI: 'WebDriver'
+            PSR-7: '\GuzzleHttp\Client'
+            Drush: 'DrupalDrush'
+            DrushAlias: 'drush'
+        DrupalDrush:
+            working_directory: '/var/www/drupal'

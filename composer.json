@@ -1,0 +1,54 @@
+{
+  "name": "arocom/codeception-drupal",
+  "type": "library",
+  "description": "Drupal module for Codeception. Based on the work Drupal extension for Behat (http://drupal.org/project/drupalextension)",
+  "keywords": [
+    "arocom",
+    "codeception-drupal",
+    "drupal",
+    "test"
+  ],
+  "homepage": "https://github.com/arocom-michael/codeception-drupal",
+  "license": "GPL-2.0+",
+  "time": "2018-01-17",
+  "authors": [
+    {
+      "name": "Michael A. Johnson Lucas",
+      "email": "johnson@arocom.de",
+      "homepage": "https://www.arocom.de",
+      "role": "Developer"
+    }
+  ],
+  "support": {
+    "email": "johnson@arocom.de",
+    "issues": "https://github.com/arocom-michael/codeception-drupal/issues",
+    "source": "https://github.com/arocom-michael/codeception-drupal",
+    "docs": "https://github.com/arocom-michael/codeception-drupal/wiki"
+  },
+  "require": {
+    "php": "^7.0"
+  },
+  "prefer-stable": true,
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-4": {
+      "Codeception\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Codeception\\": "tests"
+    }
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.1.x-dev"
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "suggest": {
+    "guncha25/codecept-drupal-drush": "dev-master"
+  }
+}
