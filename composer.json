@@ -26,7 +26,10 @@
     "docs": "https://github.com/arocom-michael/codeception-drupal/wiki"
   },
   "require": {
-    "php": "^7.0"
+    "php": "^7.0",
+    "ext-zip": "*",
+    "codeception/codeception": "^2.3",
+    "guncha25/codecept-drupal-drush": "dev-master",
   },
   "prefer-stable": true,
   "minimum-stability": "dev",
