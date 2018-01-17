@@ -1,0 +1,30 @@
+sudo: required
+
+language: php
+
+php:
+  - 7.0
+  - 7.1
+  - 7.2
+
+services:
+  - docker
+
+cache:
+  directories:
+    - vendor
+    - $HOME/.composer/cache
+
+before_install:
+  - docker pull elgalu/selenium
+  - docker run -d --name=grid -p 4444:24444 -p 5900:25900 -e TZ="Europe/Berlin" -v /dev/shm:/dev/shm --privileged elgalu/selenium
+  - docker exec grid wait_all_done 30s
+  - ./build/tools/composer clear-cache
+  - composer install
+  - vendor/bin/codecept build
+
+script:
+  - vendor/bin/codecept run acceptance test.feature -vvv
+
+notifications:
+  email: false
