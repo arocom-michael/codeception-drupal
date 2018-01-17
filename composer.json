@@ -9,7 +9,7 @@
     "test"
   ],
   "homepage": "https://github.com/arocom-michael/codeception-drupal",
-  "license": "GPL-2.0+",
+  "license": "GPL-2.0-or-later",
   "time": "2018-01-17",
   "authors": [
     {
@@ -29,7 +29,7 @@
     "php": "^7.0",
     "ext-zip": "*",
     "codeception/codeception": "^2.3",
-    "guncha25/codecept-drupal-drush": "dev-master",
+    "guncha25/codecept-drupal-drush": "dev-master"
   },
   "prefer-stable": true,
   "minimum-stability": "dev",
