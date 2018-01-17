@@ -55,6 +55,7 @@ class BaseContext extends Module
      *
      * @When I take a break
      * @When I smoke a cigarette
+     * @Given I break
      */
     public function pauseExecution()
     {
@@ -110,6 +111,8 @@ class BaseContext extends Module
      * @param string|null $method
      *
      * @return string
+     *
+     * @throws \RuntimeException
      */
     protected function getBody(string $url, $method = 'GET'): string
     {
