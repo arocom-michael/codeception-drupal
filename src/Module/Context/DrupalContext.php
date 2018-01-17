@@ -3,50 +3,58 @@ declare(strict_types=1);
 
 namespace Codeception\Module\Context;
 
-use Codeception\Lib\ModuleContainer;
-use Codeception\Module;
+use PHPUnit_Framework_AssertionFailedError;
 
-class DrupalContext extends Module
+/**
+ * Step definitions developed for Drupal ^8.0.
+ *
+ * @author Michael A. Johnson Lucas <johnson@arocom.de>
+ */
+// Work based on this composer package: drupal/drupal-extension
+// @author Jonathan Hedstrom <jhedstrom@gmail.com>
+// @author Melissa Anderson https://github.com/eliza411
+// @author Pieter Frenssen https://github.com/pfrenssen
+class DrupalContext extends BaseContext
 {
-
-    /** @var \Helper\RawDrupalContext */
-    private $rawDrupalContext;
-
-    public function setRawDrupalContext(RawDrupalContext $rawDrupalContext)
-    {
-        $this->rawDrupalContext = $rawDrupalContext;
-    }
 
     // @TODO
 
     /**
      * @Given I am an anonymous user
      * @Given I am not logged in
-     * @throws \Codeception\Exception\ModuleException
      */
     public function assertAnonymousUser()
     {
         // Verify the user is logged out.
-        if ($this->rawDrupalContext->loggedIn()) {
-            $this->rawDrupalContext->logout();
+        if ($this->loggedIn()) {
+            $this->logout();
         }
     }
 
     /**
      * Creates and authenticates a user with the given role(s).
      *
-     * @Given I am logged in as a user with the :role role(s)
-     * @Given I am logged in as a/an :role
+     * @example Given I am logged in as a user with the "authenticated user" role
+     * @example Given I am logged in as a user with the "administrator" role
+     *
+     * @Given I am logged in as a user with the :role role
+     * @Given I am logged in as a user with the :role roles
+     * @Given I am logged in as a :role
+     * @Given I am logged in as an :role
+     *
+     * @param string $role
+     *
+     * @return void
      */
-    public function assertAuthenticatedByRole($role)
+    public function assertAuthenticatedByRole(string $role)
     {
         // Check if a user with this role is already logged in.
         if (!$this->loggedInWithRole($role)) {
             // Create user (and project)
             $user = (object)[
-                'name' => $this->getRandom()->name(8),
-                'pass' => $this->getRandom()->name(16),
-                'role' => $role,
+              'name' => $this->getRandom()->name(8),
+              'pass' => $this->getRandom()->name(16),
+              'role' => $role,
             ];
             $user->mail = "{$user->name}@example.com";
 
@@ -56,8 +64,8 @@ class DrupalContext extends Module
             $roles = array_map('trim', $roles);
             foreach ($roles as $role) {
                 if (!in_array(
-                    strtolower($role),
-                    ['authenticated', 'authenticated user']
+                  strtolower($role),
+                  ['authenticated', 'authenticated user']
                 )) {
                     // Only add roles other than 'authenticated user'.
                     $this->getDriver()->userAddRole($user, $role);
@@ -80,16 +88,16 @@ class DrupalContext extends Module
      *   following fields:
      */
     public function assertAuthenticatedByRoleWithGivenFields(
-        $role,
-        TableNode $fields
+      $role,
+      TableNode $fields
     ) {
         // Check if a user with this role is already logged in.
         if (!$this->loggedInWithRole($role)) {
             // Create user (and project)
             $user = (object)[
-                'name' => $this->getRandom()->name(8),
-                'pass' => $this->getRandom()->name(16),
-                'role' => $role,
+              'name' => $this->getRandom()->name(8),
+              'pass' => $this->getRandom()->name(16),
+              'role' => $role,
             ];
             $user->mail = "{$user->name}@example.com";
 
@@ -104,8 +112,8 @@ class DrupalContext extends Module
             $roles = array_map('trim', $roles);
             foreach ($roles as $role) {
                 if (!in_array(
-                    strtolower($role),
-                    ['authenticated', 'authenticated user']
+                  strtolower($role),
+                  ['authenticated', 'authenticated user']
                 )) {
                     // Only add roles other than 'authenticated user'.
                     $this->getDriver()->userAddRole($user, $role);
@@ -120,8 +128,12 @@ class DrupalContext extends Module
 
     /**
      * @Given I am logged in as :name
+     *
+     * @param string $name
+     *
+     * @return void
      */
-    public function assertLoggedInByName($name)
+    public function assertLoggedInByName(string $name)
     {
         $manager = $this->getUserManager();
 
@@ -133,9 +145,14 @@ class DrupalContext extends Module
     }
 
     /**
-     * @Given I am logged in as a user with the :permissions permission(s)
+     * @Given I am logged in as a user with the :permissions permission
+     * @Given I am logged in as a user with the :permissions permissions
+     *
+     * @param string $permissions
+     *
+     * @return void
      */
-    public function assertLoggedInWithPermissions($permissions)
+    public function assertLoggedInWithPermissions(string $permissions)
     {
         // Create a temporary role with given permissions.
         $permissions = array_map('trim', explode(',', $permissions));
@@ -143,9 +160,9 @@ class DrupalContext extends Module
 
         // Create user.
         $user = (object)[
-            'name' => $this->getRandom()->name(8),
-            'pass' => $this->getRandom()->name(16),
-            'role' => $role,
+          'name' => $this->getRandom()->name(8),
+          'pass' => $this->getRandom()->name(16),
+          'role' => $role,
         ];
         $user->mail = "{$user->name}@example.com";
         $this->userCreate($user);
@@ -174,10 +191,10 @@ class DrupalContext extends Module
         $rows = $element->findAll('css', 'tr');
         if (empty($rows)) {
             throw new \Exception(
-                sprintf(
-                    'No rows found on the page %s',
-                    $this->getSession()->getCurrentUrl()
-                )
+              sprintf(
+                'No rows found on the page %s',
+                $this->getSession()->getCurrentUrl()
+              )
             );
         }
         foreach ($rows as $row) {
@@ -186,29 +203,37 @@ class DrupalContext extends Module
             }
         }
         throw new \Exception(
-            sprintf(
-                'Failed to find a row containing "%s" on the page %s',
-                $search,
-                $this->getSession()->getCurrentUrl()
-            )
+          sprintf(
+            'Failed to find a row containing "%s" on the page %s',
+            $search,
+            $this->getSession()->getCurrentUrl()
+          )
         );
     }
 
     /**
      * Find text in a table row containing given text.
      *
-     * @Then I should see (the text ):text in the :rowText row
+     * @example Then I should see the text "administrator" in the "Joe User" row
+     *
+     * @Then I should see :text in the :rowText row
+     * @Then I should see the text :text in the :rowText row
+     *
+     * @param string $text
+     * @param string $rowText
+     *
+     * @throws \Exception
      */
-    public function assertTextInTableRow($text, $rowText)
+    public function assertTextInTableRow(string $text, string $rowText)
     {
         $row = $this->getTableRow($this->getSession()->getPage(), $rowText);
         if (strpos($row->getText(), $text) === false) {
             throw new \Exception(
-                sprintf(
-                    'Found a row containing "%s", but it did not contain the text "%s".',
-                    $rowText,
-                    $text
-                )
+              sprintf(
+                'Found a row containing "%s", but it did not contain the text "%s".',
+                $rowText,
+                $text
+              )
             );
         }
     }
@@ -216,18 +241,26 @@ class DrupalContext extends Module
     /**
      * Asset text not in a table row containing given text.
      *
-     * @Then I should not see (the text ):text in the :rowText row
+     * @example And  I should not see the text "administrator" in the "Jane User" row
+     *
+     * @Then I should not see :text in the :rowText row
+     * @Then I should not see the text :text in the :rowText row
+     *
+     * @param string $text
+     * @param string $rowText
+     *
+     * @throws \Exception
      */
-    public function assertTextNotInTableRow($text, $rowText)
+    public function assertTextNotInTableRow(string $text, string $rowText)
     {
         $row = $this->getTableRow($this->getSession()->getPage(), $rowText);
         if (strpos($row->getText(), $text) !== false) {
             throw new \Exception(
-                sprintf(
-                    'Found a row containing "%s", but it contained the text "%s".',
-                    $rowText,
-                    $text
-                )
+              sprintf(
+                'Found a row containing "%s", but it contained the text "%s".',
+                $rowText,
+                $text
+              )
             );
         }
     }
@@ -239,25 +272,31 @@ class DrupalContext extends Module
      * `admin/structure/types`.
      *
      * @Given I click :link in the :rowText row
-     * @Then I (should )see the :link in the :rowText row
+     * @Then I see the :link in the :rowText row
+     * @Then I should see the :link in the :rowText row
+     *
+     * @param string $link
+     * @param string $rowText
+     *
+     * @throws \Exception
      */
-    public function assertClickInTableRow($link, $rowText)
+    public function assertClickInTableRow(string $link, string $rowText)
     {
         $page = $this->getSession()->getPage();
         if ($link_element = $this->getTableRow($page, $rowText)
-            ->findLink($link)) {
+          ->findLink($link)) {
             // Click the link and return.
             $link_element->click();
 
             return;
         }
         throw new \Exception(
-            sprintf(
-                'Found a row containing "%s", but no "%s" link on the page %s',
-                $rowText,
-                $link,
-                $this->getSession()->getCurrentUrl()
-            )
+          sprintf(
+            'Found a row containing "%s", but no "%s" link on the page %s',
+            $rowText,
+            $link,
+            $this->getSession()->getCurrentUrl()
+          )
         );
     }
 
@@ -280,63 +319,54 @@ class DrupalContext extends Module
     /**
      * Creates content of the given type.
      *
-     * @Given I am viewing a/an :type (content )with the title :title
-     * @Given a/an :type (content )with the title :title
+     * @Given I am viewing a :type content with the title :title
+     * @Given I am viewing an :type content with the title :title
+     * @Given a :type content with the title :title
+     * @Given an :type content with the title :title
      */
-    public function createNode($type, $title)
+    public function createNode(string $type, string $title)
     {
         // @todo make this easily extensible.
         $node = (object)[
-            'title' => $title,
-            'type' => $type,
+          'title' => $title,
+          'type' => $type,
         ];
         $saved = $this->nodeCreate($node);
         // Set internal page on the new node.
-        $this->getSession()->visit($this->locatePath('/node/'.$saved->nid));
+        $this->getSession()->visit($this->locatePath('/node/' . $saved->nid));
     }
 
     /**
      * Creates content authored by the current user.
      *
-     * @Given I am viewing my :type (content )with the title :title
+     * @Given I am viewing my :type with the title :title
+     * @Given I am viewing my :type content with the title :title
+     *
+     * @param string $type
+     * @param string $title
+     *
+     * @throws \Exception
      */
-    public function createMyNode($type, $title)
+    public function createMyNode(string $type, string $title)
     {
         if ($this->getUserManager()->currentUserIsAnonymous()) {
             throw new \Exception(
-                sprintf(
-                    'There is no current logged in user to create a node for.'
-                )
+              sprintf(
+                'There is no current logged in user to create a node for.'
+              )
             );
         }
 
         $node = (object)[
-            'title' => $title,
-            'type' => $type,
-            'body' => $this->getRandom()->name(255),
-            'uid' => $this->getUserManager()->getCurrentUser()->uid,
+          'title' => $title,
+          'type' => $type,
+          'body' => $this->getRandom()->name(255),
+          'uid' => $this->getUserManager()->getCurrentUser()->uid,
         ];
         $saved = $this->nodeCreate($node);
 
         // Set internal page on the new node.
-        $this->getSession()->visit($this->locatePath('/node/'.$saved->nid));
-    }
-
-    /**
-     * Creates content of a given type provided in the form:
-     * | title    | author     | status | created           |
-     * | My title | Joe Editor | 1      | 2014-10-17 8:00am |
-     * | ...      | ...        | ...    | ...               |
-     *
-     * @Given :type content:
-     */
-    public function createNodes($type, TableNode $nodesTable)
-    {
-        foreach ($nodesTable->getHash() as $nodeHash) {
-            $node = (object)$nodeHash;
-            $node->type = $type;
-            $this->nodeCreate($node);
-        }
+        $this->getSession()->visit($this->locatePath('/node/' . $saved->nid));
     }
 
     /**
@@ -347,12 +377,13 @@ class DrupalContext extends Module
      * | status    | 1              |
      * | ...       | ...            |
      *
-     * @Given I am viewing a/an :type( content):
+     * @Given I am viewing a :type content
+     * @Given I am viewing an :type content
      */
-    public function assertViewingNode($type, TableNode $fields)
+    public function assertViewingNode(string $type, TableNode $fields)
     {
         $node = (object)[
-            'type' => $type,
+          'type' => $type,
         ];
         foreach ($fields->getRowsHash() as $field => $value) {
             $node->{$field} = $value;
@@ -361,50 +392,31 @@ class DrupalContext extends Module
         $saved = $this->nodeCreate($node);
 
         // Set internal browser on the node.
-        $this->getSession()->visit($this->locatePath('/node/'.$saved->nid));
+        $this->getSession()->visit($this->locatePath('/node/' . $saved->nid));
     }
 
     /**
      * Asserts that a given content type is editable.
+     * drush ev 'foreach(array_keys(node_type_get_types()) as $type) { echo $type.PHP_EOL; }'
+     * @example Then I should be able to edit an "article"
      *
-     * @Then I should be able to edit a/an :type( content)
+     * @Then I should be able to edit a :type
+     * @Then I should be able to edit an :type
      */
-    public function assertEditNodeOfType($type)
+    public function assertEditNodeOfType(string $type)
     {
         $node = (object)[
-            'type' => $type,
-            'title' => "Test $type",
+          'type' => $type,
+          'title' => "Test $type",
         ];
         $saved = $this->nodeCreate($node);
 
         // Set internal browser on the node edit page.
         $this->getSession()
-            ->visit($this->locatePath('/node/'.$saved->nid.'/edit'));
+          ->visit($this->locatePath('/node/' . $saved->nid . '/edit'));
 
         // Test status.
         $this->assertSession()->statusCodeEquals('200');
-    }
-
-
-    /**
-     * Creates a term on an existing vocabulary.
-     *
-     * @Given I am viewing a/an :vocabulary term with the name :name
-     * @Given a/an :vocabulary term with the name :name
-     */
-    public function createTerm($vocabulary, $name)
-    {
-        // @todo make this easily extensible.
-        $term = (object)[
-            'name' => $name,
-            'vocabulary_machine_name' => $vocabulary,
-            'description' => $this->getRandom()->name(255),
-        ];
-        $saved = $this->termCreate($term);
-
-        // Set internal page on the term.
-        $this->getSession()
-            ->visit($this->locatePath('/taxonomy/term/'.$saved->tid));
     }
 
     /**
@@ -415,7 +427,7 @@ class DrupalContext extends Module
      * | name     | mail         | roles        |
      * | user foo | foo@bar.com  | role1, role2 |
      *
-     * @Given users:
+     * @Given users
      */
     public function createUsers(TableNode $usersTable)
     {
@@ -444,89 +456,83 @@ class DrupalContext extends Module
     }
 
     /**
-     * Creates one or more terms on an existing vocabulary.
+     * Logs the current user out.
      *
-     * Provide term data in the following format:
+     * @return void
      *
-     * | name  | parent | description | weight | taxonomy_field_image |
-     * | Snook | Fish   | Marine fish | 10     | snook-123.jpg        |
-     * | ...   | ...    | ...         | ...    | ...                  |
-     *
-     * Only the 'name' field is required.
-     *
-     * @Given :vocabulary terms:
+     * @TODO Check if the step is necessary
      */
-    public function createTerms($vocabulary, TableNode $termsTable)
+    private function logout()
     {
-        foreach ($termsTable->getHash() as $termsHash) {
-            $term = (object)$termsHash;
-            $term->vocabulary_machine_name = $vocabulary;
-            $this->termCreate($term);
-        }
+        $this->webDriver->amOnPage('/user/logout');
     }
 
     /**
-     * Creates one or more languages.
+     * Determine if the a user is already logged in.
      *
-     * @Given the/these (following )languages are available:
+     * @return boolean
+     *   Returns TRUE if a user is logged in for this session.
      *
-     * Provide language data in the following format:
-     *
-     * | langcode |
-     * | en       |
-     * | fr       |
-     *
-     * @param TableNode $langcodesTable
-     *   The table listing languages by their ISO code.
+     * @TODO Check if the step is necessary
      */
-    public function createLanguages(TableNode $langcodesTable)
+    private function loggedIn(): bool
     {
-        foreach ($langcodesTable->getHash() as $row) {
-            $language = (object)[
-                'langcode' => $row['languages'],
-            ];
-            $this->languageCreate($language);
+        try {
+            $this->webDriver->seeElement(DrupalExtension::SELECTORS_LOGGED_IN_SELECTOR);
+
+            return true;
+        } catch (PHPUnit_Framework_AssertionFailedError $exception) {
+            // This test may fail if the driver did not load any site yet.
         }
+
+        $this->webDriver->amOnPage('/user/login');
+        try {
+            $this->webDriver->dontSeeElement(DrupalExtension::SELECTORS_LOGIN_FORM_SELECTOR);
+
+            return true;
+        } catch (PHPUnit_Framework_AssertionFailedError $exception) {
+            // This test may fail if the driver did not load any site yet.
+        }
+
+        $this->webDriver->amOnPage('/');
+        try {
+            $this->webDriver->seeLink(DrupalExtension::TEXT_LOGO_OUT);
+
+            return true;
+        } catch (PHPUnit_Framework_AssertionFailedError $exception) {
+            // This test may fail if the driver did not load any site yet.
+        }
+
+        return false;
     }
 
-    /**
-     * Pauses the scenario until the user presses a key. Useful when debugging
-     * a scenario.
-     *
-     * @Then (I )break
-     */
-    public function iPutABreakpoint()
+    private function drushAddUser(string $user, string $email, string $password)
     {
-        fwrite(
-            STDOUT,
-            "\033[s \033[93m[Breakpoint] Press \033[1;93m[RETURN]\033[0;93m to continue, or 'q' to quit...\033[0m"
-        );
-        do {
-            $line = trim(fgets(STDIN, 1024));
-            //Note: this assumes ASCII encoding.  Should probably be revamped to
-            //handle other character sets.
-            $charCode = ord($line);
-            switch ($charCode) {
-                case 0: //CR
-                case 121: //y
-                case 89: //Y
-                    break 2;
-                // case 78: //N
-                // case 110: //n
-                case 113: //q
-                case 81: //Q
-                    throw new \Exception("Exiting test intentionally.");
-                default:
-                    fwrite(
-                        STDOUT,
-                        sprintf(
-                            "\nInvalid entry '%s'.  Please enter 'y', 'q', or the enter key.\n",
-                            $line
-                        )
-                    );
-                    break;
-            }
-        } while (true);
-        fwrite(STDOUT, "\033[u");
+
+    }
+
+    private function drushDeleteUser(string $user)
+    {
+
+    }
+
+    private function drushLoginLink(string $user)
+    {
+
+    }
+
+    private function drushRemoveRole(string $role, string $user)
+    {
+
+    }
+
+    private function drushAddRole(string $role, string $user)
+    {
+
+    }
+
+    private function drushGetTypes(): array
+    {
+        return [];
     }
 }
