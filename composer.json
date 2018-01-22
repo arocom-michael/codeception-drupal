@@ -31,6 +31,10 @@
     "codeception/codeception": "^2.3",
     "guncha25/codecept-drupal-drush": "dev-master"
   },
+  "require-dev": {
+    "phpstan/phpstan": "^0.9",
+    "phpstan/phpstan-strict-rules": "^0.9"
+  },
   "prefer-stable": true,
   "minimum-stability": "dev",
   "autoload": {
@@ -53,5 +57,8 @@
   },
   "suggest": {
     "guncha25/codecept-drupal-drush": "dev-master"
+  },
+  "scripts": {
+    "phpstan": "vendor/bin/phpstan analyse -l 7 -c phpstan.neon src"
   }
 }
