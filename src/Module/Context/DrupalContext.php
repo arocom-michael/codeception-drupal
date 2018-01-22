@@ -3,7 +3,13 @@ declare(strict_types=1);
 
 namespace Codeception\Module\Context;
 
-use PHPUnit_Framework_AssertionFailedError;
+use Behat\Gherkin\Node\TableNode;
+use Codeception\Exception\ParseException;
+use Codeception\Util\HttpCode;
+use Codeception\Util\Locator;
+use PHPUnit\Framework\AssertionFailedError;
+use Symfony\Component\Process\InputStream;
+use Symfony\Component\Process\Process;
 
 /**
  * Step definitions developed for Drupal ^8.0.
@@ -17,11 +23,61 @@ use PHPUnit_Framework_AssertionFailedError;
 class DrupalContext extends BaseContext
 {
 
-    // @TODO
+    /**
+     * Keep track of drush output.
+     *
+     * @var string
+     */
+    protected $processOutput;
+
+    /**
+     * Keep track of drush error output.
+     *
+     * @var string
+     */
+    protected $processErrorOutput;
+
+    /** @var \Codeception\Module\DrupalDrush */
+    protected $drupalDrush;
+
+    /** @var string */
+    protected $drushAlias;
+
+    const DRUSH = 'drush';
+
+    /**
+     * The constructor should not be overwritten,
+     * to be able to load more dependencies.
+     */
+    public function _initialize()
+    {
+        $this->drupalDrush = $this->loadDependency('Drush');
+        $this->drushAlias = $this->_getConfig('DrushAlias') ?: self::DRUSH;
+        $this->processOutput = '';
+        $this->processErrorOutput = '';
+    }
+
+    /**
+     * Return the most recent drush command output.
+     *
+     * @return string
+     *
+     * @throws \RuntimeException
+     */
+    public function _readDrushOutput(): string
+    {
+        if ($this->processOutput === null) {
+            throw new \RuntimeException('No drush output was found.');
+        }
+
+        return $this->processOutput;
+    }
 
     /**
      * @Given I am an anonymous user
      * @Given I am not logged in
+     *
+     * @return void
      */
     public function assertAnonymousUser()
     {
@@ -45,84 +101,75 @@ class DrupalContext extends BaseContext
      * @param string $role
      *
      * @return void
+     *
+     * @throws \Exception
      */
     public function assertAuthenticatedByRole(string $role)
     {
         // Check if a user with this role is already logged in.
-        if (!$this->loggedInWithRole($role)) {
-            // Create user (and project)
-            $user = (object)[
-              'name' => $this->getRandom()->name(8),
-              'pass' => $this->getRandom()->name(16),
-              'role' => $role,
-            ];
-            $user->mail = "{$user->name}@example.com";
-
-            $this->userCreate($user);
-
-            $roles = explode(',', $role);
-            $roles = array_map('trim', $roles);
-            foreach ($roles as $role) {
-                if (!in_array(
-                  strtolower($role),
-                  ['authenticated', 'authenticated user']
-                )) {
-                    // Only add roles other than 'authenticated user'.
-                    $this->getDriver()->userAddRole($user, $role);
-                }
-            }
-
-            // Login.
-            $this->login($user);
+        if (!$this->loggedIn()) {
+            return;
         }
+        $password = $this->generatePassword();
+        $user = 'test-user';
+        $this->drushAddUser($user, "{$user}@example.com", $password);
+        $this->drushAddRole($role, $user);
+        // Login.
+        $this->drushLoginLink($user, 'de-de');
     }
 
     /**
-     * Creates and authenticates a user with the given role(s) and given
-     * fields.
-     * | field_user_name     | John  |
-     * | field_user_surname  | Smith |
-     * | ...                 | ...   |
+     * Creates and authenticates a user with the given role(s) and given fields.
+     * | name     | John             |
+     * | email    | john@example.com |
+     * | password | 1234567890ABCDEF |
      *
-     * @Given I am logged in as a user with the :role role(s) and I have the
-     *   following fields:
+     * @Given I am logged in as a user with the :role role and I have the following fields
+     *
+     * @param string $role
+     * @param \Behat\Gherkin\Node\TableNode $fields
+     *
+     * @return void
+     *
+     * @throws \Exception
      */
     public function assertAuthenticatedByRoleWithGivenFields(
-      $role,
+      string $role,
       TableNode $fields
     ) {
         // Check if a user with this role is already logged in.
-        if (!$this->loggedInWithRole($role)) {
-            // Create user (and project)
-            $user = (object)[
-              'name' => $this->getRandom()->name(8),
-              'pass' => $this->getRandom()->name(16),
-              'role' => $role,
-            ];
-            $user->mail = "{$user->name}@example.com";
-
-            // Assign fields to user before creation.
-            foreach ($fields->getRowsHash() as $field => $value) {
-                $user->{$field} = $value;
-            }
-
-            $this->userCreate($user);
-
-            $roles = explode(',', $role);
-            $roles = array_map('trim', $roles);
-            foreach ($roles as $role) {
-                if (!in_array(
-                  strtolower($role),
-                  ['authenticated', 'authenticated user']
-                )) {
-                    // Only add roles other than 'authenticated user'.
-                    $this->getDriver()->userAddRole($user, $role);
-                }
-            }
-
-            // Login.
-            $this->login($user);
+        if ($this->loggedIn()) {
+            return;
         }
+        list($user, $email, $password) = [
+          'test-user',
+          'test-user@example.com',
+          $this->generatePassword(),
+        ];
+        $allowedFields = ['name', 'email', 'password'];
+        // Assign fields to user before creation.
+        foreach ($fields->getRowsHash() as $field => $value) {
+            if (!\in_array($field, $allowedFields, true)) {
+                continue;
+            }
+            switch ($field) {
+                case 'name':
+                    $user = $value;
+                    break;
+                case 'email':
+                    $email = $value;
+                    break;
+                case 'password':
+                    $password = $value;
+                    break;
+                default:
+                    break;
+            }
+        }
+        $this->drushAddUser($user, $email, $password);
+        $this->drushAddRole($role, $user);
+        // Login.
+        $this->drushLoginLink($user, 'de-de');
     }
 
 
@@ -135,13 +182,7 @@ class DrupalContext extends BaseContext
      */
     public function assertLoggedInByName(string $name)
     {
-        $manager = $this->getUserManager();
-
-        // Change internal current user.
-        $manager->setCurrentUser($manager->getUser($name));
-
-        // Login.
-        $this->login($manager->getUser($name));
+        $this->webDriver->see($name, '#toolbar-item-user');
     }
 
     /**
@@ -151,64 +192,37 @@ class DrupalContext extends BaseContext
      * @param string $permissions
      *
      * @return void
-     */
-    public function assertLoggedInWithPermissions(string $permissions)
-    {
-        // Create a temporary role with given permissions.
-        $permissions = array_map('trim', explode(',', $permissions));
-        $role = $this->getDriver()->roleCreate($permissions);
-
-        // Create user.
-        $user = (object)[
-          'name' => $this->getRandom()->name(8),
-          'pass' => $this->getRandom()->name(16),
-          'role' => $role,
-        ];
-        $user->mail = "{$user->name}@example.com";
-        $this->userCreate($user);
-
-        // Assign the temporary role with given permissions.
-        $this->getDriver()->userAddRole($user, $role);
-        $this->roles[] = $role;
-
-        // Login.
-        $this->login($user);
-    }
-
-    /**
-     * Retrieve a table row containing specified text from a given element.
-     *
-     * @param \Behat\Mink\Element\Element
-     * @param string
-     *   The text to search for in the table row.
-     *
-     * @return \Behat\Mink\Element\NodeElement
      *
      * @throws \Exception
      */
-    public function getTableRow(Element $element, $search)
+    public function assertLoggedInWithPermissions(string $permissions)
     {
-        $rows = $element->findAll('css', 'tr');
-        if (empty($rows)) {
-            throw new \Exception(
-              sprintf(
-                'No rows found on the page %s',
-                $this->getSession()->getCurrentUrl()
-              )
-            );
+        // Check if a user with this role is already logged in.
+        if ($this->loggedIn()) {
+            return;
         }
-        foreach ($rows as $row) {
-            if (strpos($row->getText(), $search) !== false) {
-                return $row;
-            }
-        }
-        throw new \Exception(
-          sprintf(
-            'Failed to find a row containing "%s" on the page %s',
-            $search,
-            $this->getSession()->getCurrentUrl()
-          )
-        );
+        $role = 'test';
+        // Create a new role.
+        $drushArguments = [$role, \ucfirst($role)];
+        $process = $this->drupalDrush->getDrush('role-create', $drushArguments, [], $this->drushAlias);
+        $this->webDriver->debug($this->getRunProcessOutput($process));
+        // Parse permissions.
+        $drushArguments = $this->getArguments($permissions);
+        $drushArguments = [implode($drushArguments, ', ')];
+        // Grant specified permission(s) to the test role.
+        $process = $this->drupalDrush->getDrush('role-add-perm',
+          $drushArguments, [], $this->drushAlias);
+        $this->webDriver->debug($this->getRunProcessOutput($process));
+        // Create user.
+        list($user, $email, $password) = [
+          'test-user',
+          'test-user@example.com',
+          $this->generatePassword(),
+        ];
+        $this->drushAddUser($user, $email, $password);
+        $this->drushAddRole($role, $user);
+        // Login.
+        $this->drushLoginLink($user, 'de-de');
     }
 
     /**
@@ -222,20 +236,20 @@ class DrupalContext extends BaseContext
      * @param string $text
      * @param string $rowText
      *
+     * @return void
+     *
      * @throws \Exception
      */
     public function assertTextInTableRow(string $text, string $rowText)
     {
-        $row = $this->getTableRow($this->getSession()->getPage(), $rowText);
-        if (strpos($row->getText(), $text) === false) {
-            throw new \Exception(
-              sprintf(
-                'Found a row containing "%s", but it did not contain the text "%s".',
-                $rowText,
-                $text
-              )
-            );
-        }
+        // table > tr
+        $tableRow = Locator::contains('tr', $rowText);
+        $this->webDriver->debug($tableRow);
+        $this->webDriver->see($rowText, $tableRow);
+        // table > tr > td
+        $tableDataCell = Locator::contains($tableRow, $text);
+        $this->webDriver->debug($tableDataCell);
+        $this->webDriver->see($text, $tableDataCell);
     }
 
     /**
@@ -249,20 +263,20 @@ class DrupalContext extends BaseContext
      * @param string $text
      * @param string $rowText
      *
+     * @return void
+     *
      * @throws \Exception
      */
     public function assertTextNotInTableRow(string $text, string $rowText)
     {
-        $row = $this->getTableRow($this->getSession()->getPage(), $rowText);
-        if (strpos($row->getText(), $text) !== false) {
-            throw new \Exception(
-              sprintf(
-                'Found a row containing "%s", but it contained the text "%s".',
-                $rowText,
-                $text
-              )
-            );
-        }
+        // table > tr
+        $tableRow = Locator::contains('tr', $rowText);
+        $this->webDriver->debug($tableRow);
+        $this->webDriver->see($rowText, $tableRow);
+        // table > tr > td
+        $tableDataCell = Locator::contains($tableRow, $text);
+        $this->webDriver->debug($tableDataCell);
+        $this->webDriver->dontSee($text, $tableDataCell);
     }
 
     /**
@@ -278,145 +292,93 @@ class DrupalContext extends BaseContext
      * @param string $link
      * @param string $rowText
      *
+     * @return void
+     *
      * @throws \Exception
      */
     public function assertClickInTableRow(string $link, string $rowText)
     {
-        $page = $this->getSession()->getPage();
-        if ($link_element = $this->getTableRow($page, $rowText)
-          ->findLink($link)) {
-            // Click the link and return.
-            $link_element->click();
-
-            return;
-        }
-        throw new \Exception(
-          sprintf(
-            'Found a row containing "%s", but no "%s" link on the page %s',
-            $rowText,
-            $link,
-            $this->getSession()->getCurrentUrl()
-          )
-        );
+        // table > tr
+        $tableRow = Locator::contains('tr', $rowText);
+        $this->webDriver->debug($tableRow);
+        $this->webDriver->see($rowText, $tableRow);
+        // table > tr > td
+        $tableDataCell = Locator::contains($tableRow, $link);
+        $this->webDriver->debug($tableDataCell);
+        // Link
+        $this->webDriver->click($tableDataCell);
     }
 
     /**
      * @Given the cache has been cleared
+     *
+     * @return void
      */
     public function assertCacheClear()
     {
-        $this->getDriver()->clearCache();
+        $this->drupalDrush->getDrush('cache-clear', [], [], $this->drushAlias);
     }
 
     /**
      * @Given I run cron
+     *
+     * @return void
      */
     public function assertCron()
     {
-        $this->getDriver()->runCron();
+        $this->drupalDrush->getDrush('core-cron', [], [], $this->drushAlias);
     }
 
-    /**
-     * Creates content of the given type.
-     *
-     * @Given I am viewing a :type content with the title :title
-     * @Given I am viewing an :type content with the title :title
-     * @Given a :type content with the title :title
-     * @Given an :type content with the title :title
-     */
-    public function createNode(string $type, string $title)
-    {
-        // @todo make this easily extensible.
-        $node = (object)[
-          'title' => $title,
-          'type' => $type,
-        ];
-        $saved = $this->nodeCreate($node);
-        // Set internal page on the new node.
-        $this->getSession()->visit($this->locatePath('/node/' . $saved->nid));
-    }
-
-    /**
-     * Creates content authored by the current user.
-     *
-     * @Given I am viewing my :type with the title :title
-     * @Given I am viewing my :type content with the title :title
-     *
-     * @param string $type
-     * @param string $title
-     *
-     * @throws \Exception
-     */
-    public function createMyNode(string $type, string $title)
-    {
-        if ($this->getUserManager()->currentUserIsAnonymous()) {
-            throw new \Exception(
-              sprintf(
-                'There is no current logged in user to create a node for.'
-              )
-            );
-        }
-
-        $node = (object)[
-          'title' => $title,
-          'type' => $type,
-          'body' => $this->getRandom()->name(255),
-          'uid' => $this->getUserManager()->getCurrentUser()->uid,
-        ];
-        $saved = $this->nodeCreate($node);
-
-        // Set internal page on the new node.
-        $this->getSession()->visit($this->locatePath('/node/' . $saved->nid));
-    }
-
-    /**
-     * Creates content of the given type, provided in the form:
-     * | title     | My node        |
-     * | Field One | My field value |
-     * | author    | Joe Editor     |
-     * | status    | 1              |
-     * | ...       | ...            |
-     *
-     * @Given I am viewing a :type content
-     * @Given I am viewing an :type content
-     */
-    public function assertViewingNode(string $type, TableNode $fields)
-    {
-        $node = (object)[
-          'type' => $type,
-        ];
-        foreach ($fields->getRowsHash() as $field => $value) {
-            $node->{$field} = $value;
-        }
-
-        $saved = $this->nodeCreate($node);
-
-        // Set internal browser on the node.
-        $this->getSession()->visit($this->locatePath('/node/' . $saved->nid));
-    }
 
     /**
      * Asserts that a given content type is editable.
-     * drush ev 'foreach(array_keys(node_type_get_types()) as $type) { echo $type.PHP_EOL; }'
+     * drush ev 'foreach(array_keys(node_type_get_types()) as $type) { echo
+     * $type.PHP_EOL; }'
+     *
      * @example Then I should be able to edit an "article"
      *
      * @Then I should be able to edit a :type
      * @Then I should be able to edit an :type
+     *
+     * @param string $type
+     *
+     * @return void
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     * @throws \Codeception\Exception\ModuleConfigException
+     * @throws \Codeception\Exception\ParseException
      */
     public function assertEditNodeOfType(string $type)
     {
-        $node = (object)[
-          'type' => $type,
-          'title' => "Test $type",
-        ];
-        $saved = $this->nodeCreate($node);
+        $types = $this->drushGetTypes();
+        if (!\in_array($type, $types, true)) {
+            throw new ParseException('Invalid type');
+        }
+
+        $argument = '$nids = \Drupal::entityQuery("node")->condition("type", "' . $type . '")->execute();';
+        $argument .= ' echo json_encode(array_values($nids)).PHP_EOL;';
+        $drushArguments = [$argument];
+        $process = $this->drupalDrush->getDrush('ev', $drushArguments, [], $this->drushAlias);
+        $this->webDriver->debug($this->getRunProcessOutput($process));
+
+        /** @var iterable $json */
+        $json = json_decode($this->processOutput);
+        $nids = [];
+        foreach ($json as $nid) {
+            $nids[] = $nid;
+        }
+
+        // PHP 7.1.0 uses Mersenne Twister instead of the libc rand function.
+        $randomNid = array_rand($nids);
 
         // Set internal browser on the node edit page.
-        $this->getSession()
-          ->visit($this->locatePath('/node/' . $saved->nid . '/edit'));
-
-        // Test status.
-        $this->assertSession()->statusCodeEquals('200');
+        $page = "/node/{$randomNid}/edit";
+        $url = $this->webDriver->_getUrl() . $page;
+        $actualStatusCode = $this->getStatusCode($url);
+        $this->assertEquals(HttpCode::OK, $actualStatusCode, 'Page not found');
+        // Visit the content page.
+        $this->webDriver->amOnPage($page);
     }
 
     /**
@@ -428,11 +390,18 @@ class DrupalContext extends BaseContext
      * | user foo | foo@bar.com  | role1, role2 |
      *
      * @Given users
+     *
+     * @param \Behat\Gherkin\Node\TableNode $usersTable
+     *
+     * @return void
+     *
+     * @throws \Exception
      */
     public function createUsers(TableNode $usersTable)
     {
-        foreach ($usersTable->getHash() as $userHash) {
+        $allowedRolls = $this->drushGetRoles();
 
+        foreach ($usersTable->getRows() as $userHash) {
             // Split out roles to process after user is created.
             $roles = [];
             if (isset($userHash['roles'])) {
@@ -441,16 +410,15 @@ class DrupalContext extends BaseContext
                 unset($userHash['roles']);
             }
 
-            $user = (object)$userHash;
-            // Set a password.
-            if (!isset($user->pass)) {
-                $user->pass = $this->getRandom()->name();
-            }
-            $this->userCreate($user);
+            $password = $this->generatePassword();
+            $this->drushAddUser($userHash['name'], $userHash['mail'], $password);
 
             // Assign roles.
             foreach ($roles as $role) {
-                $this->getDriver()->userAddRole($user, $role);
+                if (!\in_array($role, $allowedRolls, true)) {
+                    continue;
+                }
+                $this->drushAddRole($role, $userHash['name']);
             }
         }
     }
@@ -481,7 +449,7 @@ class DrupalContext extends BaseContext
             $this->webDriver->seeElement(DrupalExtension::SELECTORS_LOGGED_IN_SELECTOR);
 
             return true;
-        } catch (PHPUnit_Framework_AssertionFailedError $exception) {
+        } catch (AssertionFailedError $exception) {
             // This test may fail if the driver did not load any site yet.
         }
 
@@ -490,7 +458,7 @@ class DrupalContext extends BaseContext
             $this->webDriver->dontSeeElement(DrupalExtension::SELECTORS_LOGIN_FORM_SELECTOR);
 
             return true;
-        } catch (PHPUnit_Framework_AssertionFailedError $exception) {
+        } catch (AssertionFailedError $exception) {
             // This test may fail if the driver did not load any site yet.
         }
 
@@ -499,40 +467,304 @@ class DrupalContext extends BaseContext
             $this->webDriver->seeLink(DrupalExtension::TEXT_LOGO_OUT);
 
             return true;
-        } catch (PHPUnit_Framework_AssertionFailedError $exception) {
+        } catch (AssertionFailedError $exception) {
             // This test may fail if the driver did not load any site yet.
         }
 
         return false;
     }
 
-    private function drushAddUser(string $user, string $email, string $password)
+    /**
+     * @param string $user
+     * @param string $email
+     * @param string $password
+     *
+     * @Given I create :user user with :email mail and :password password
+     * @Given I create :user user with :email email and :password password
+     *
+     * @example drush user-create newuser --mail="person@example.com" --password="letmein"
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     */
+    public function drushAddUser(string $user, string $email, string $password)
     {
-
+        list($command, $arguments, $options) = [
+          'user-create',
+          $user,
+          "--mail={$email}|--password={$password}",
+        ];
+        $drushArguments = $this->getArguments($arguments);
+        $drushOptions = $this->getArguments($options);
+        $process = $this->drupalDrush->getDrush($command, $drushArguments,
+          $drushOptions, $this->drushAlias);
+        $this->webDriver->debug($this->getRunProcessOutput($process));
     }
 
-    private function drushDeleteUser(string $user)
+    /**
+     * @param string $user
+     *
+     * @Given I delete :user user
+     *
+     * @example drush user-cancel username
+     *
+     * @return void
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     * @throws \Codeception\Exception\ParseException
+     */
+    public function drushDeleteUser(string $user)
     {
+        list($command, $arguments, $options) = ['user-cancel', $user, ''];
+        $drushArguments = $this->getArguments($arguments);
+        $drushOptions = $this->getArguments($options);
+        $process = $this->drupalDrush->getDrush($command, $drushArguments, $drushOptions, $this->drushAlias);
+        $output = $this->getRunProcessOutput($process);
+        $this->webDriver->debug($output);
 
+        $messages = [
+          'message' => 'Cancel user account?:  (y/n):',
+          'confirmation' => "Yes, I want to cancel {$user} user",
+          'negation' => "No, I don't want to cancel {$user} user",
+        ];
+        $this->interactWithCommandLine($process, $output, $messages);
     }
 
-    private function drushLoginLink(string $user)
+    /**
+     * @param string $user
+     *
+     * @Given I get a login link for :user user with :locale locale
+     *
+     * @exampledrush user-login ryan
+     *
+     * @return void
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     */
+    public function drushLoginLink(string $user, string $locale)
     {
-
+        list($command, $arguments, $options) = ['user-login', $user, ''];
+        $drushArguments = $this->getArguments($arguments);
+        $drushOptions = $this->getArguments($options);
+        $process = $this->drupalDrush->getDrush($command, $drushArguments, $drushOptions, $this->drushAlias);
+        $this->webDriver->debug($this->getRunProcessOutput($process));
+        $url = trim($this->processOutput);
+        $path = parse_url($url, PHP_URL_PATH);
+        $path = str_replace('/en/user/', "/{$locale}/user/", $path);
+        $this->webDriver->amOnPage($path);
     }
 
-    private function drushRemoveRole(string $role, string $user)
+    /**
+     * @param string $role
+     * @param string $user
+     *
+     * @Given I remove :role role from :user user
+     *
+     * @example drush user-remove-role administrator --name=john
+     *
+     * @return void
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     */
+    public function drushRemoveRole(string $role, string $user)
     {
-
+        list($command, $arguments, $options) = [
+          'user-remove-role',
+          $role,
+          "--name={$user}",
+        ];
+        $drushArguments = $this->getArguments($arguments);
+        $drushOptions = $this->getArguments($options);
+        $process = $this->drupalDrush->getDrush($command, $drushArguments, $drushOptions, $this->drushAlias);
+        $this->webDriver->debug($this->getRunProcessOutput($process));
     }
 
-    private function drushAddRole(string $role, string $user)
+    /**
+     * The anonymous and authenticated roles cannot be assigned manually.
+     *
+     * @param string $role
+     * @param string $user
+     *
+     * @Given I add :role role for :user user
+     *
+     * @example drush user-add-role administrator --name=john
+     *
+     * @return void
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     */
+    public function drushAddRole(string $role, string $user)
     {
-
+        list($command, $arguments, $options) = [
+          'user-add-role',
+          $role,
+          "--name={$user}",
+        ];
+        $drushArguments = $this->getArguments($arguments);
+        $drushOptions = $this->getArguments($options);
+        $process = $this->drupalDrush->getDrush($command, $drushArguments, $drushOptions, $this->drushAlias);
+        $this->webDriver->debug($this->getRunProcessOutput($process));
     }
 
-    private function drushGetTypes(): array
+    /**
+     * @Given I get types
+     *
+     * @example drush ev "echo json_encode(array_keys(node_type_get_types())).PHP_EOL;"
+     * ["article","page","sidebar"]
+     *
+     * @return array<int, string>
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     */
+    public function drushGetTypes(): array
     {
-        return [];
+        $drush = [
+          'ev',
+          'echo json_encode(array_keys(node_type_get_types())).PHP_EOL;',
+          '',
+        ];
+        list($command, $arguments, $options) = $drush;
+        $drushArguments = $this->getArguments($arguments);
+        $drushOptions = $this->getArguments($options);
+        $process = $this->drupalDrush->getDrush($command, $drushArguments, $drushOptions, $this->drushAlias);
+        $this->webDriver->debug($this->getRunProcessOutput($process));
+
+        /** @var iterable $json */
+        $json = json_decode($this->processOutput);
+        $types = [];
+        foreach ($json as $type) {
+            $types[] = $type;
+        }
+
+        return $types;
+    }
+
+    /**
+     * @Given I get roles
+     *
+     * @example drush role-list --format=json
+     * ["anonymous", "authenticated", "administrator"]
+     *
+     * @return array<int, string>
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     */
+    public function drushGetRoles(): array
+    {
+        list($command, $arguments, $options) = [
+          'role-list',
+          '',
+          '--format=json',
+        ];
+        $drushArguments = $this->getArguments($arguments);
+        $drushOptions = $this->getArguments($options);
+        $process = $this->drupalDrush->getDrush($command, $drushArguments, $drushOptions, $this->drushAlias);
+        $this->webDriver->debug($this->getRunProcessOutput($process));
+
+        /** @var iterable $json */
+        $json = json_decode($this->processOutput);
+        $roles = [];
+        foreach ($json as $role) {
+            $roles[] = $role->rid;
+        }
+
+        return $roles;
+    }
+
+    /**
+     * @param \Symfony\Component\Process\Process $process
+     *
+     * @return string
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     */
+    private function getRunProcessOutput(Process $process): string
+    {
+        $process->start();
+        $output = '';
+        $errorOutput = '';
+        foreach ($process as $type => $data) {
+            if ($process::OUT === $type) {
+                $output .= $data . PHP_EOL;
+            } else {
+                $errorOutput .= $data . PHP_EOL;
+            }
+        }
+        $process->stop();
+
+        $this->processOutput = $output;
+        $this->processErrorOutput = $errorOutput;
+
+        return "{$output}[Drush]{$errorOutput}";
+    }
+
+    /**
+     * If the drush config-set commands needs a confirmation like:
+     *   Do you want to update {$key} key in {$configName} config? (y/n):
+     *
+     * @param \Symfony\Component\Process\Process $process
+     * @param string $output Console output
+     * @param array<string, string> $messages Messages within an associative
+     *     array
+     *   ['message' => '...', 'confirmation' => '...', 'negation' => '...']
+     *
+     * @return void
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
+     * @throws \Codeception\Exception\ParseException
+     */
+    private function interactWithCommandLine(
+      Process $process,
+      string $output,
+      array $messages
+    ) {
+        $allowedMessages = ['message', 'confirmation', 'negation'];
+        $actualMessages = array_keys($messages);
+        $format = 'The messages parameter should be like ';
+        $format .= '["%s" => "...", "%s" => "...", "%s" => "..."]';
+        $errorMessage = vsprintf($format, $allowedMessages);
+
+        // Compare the two arrays, to check if they contain the same keys.
+        if (array_diff($allowedMessages,
+            $actualMessages) !== array_diff($actualMessages,
+            $allowedMessages)) {
+            throw new ParseException($errorMessage);
+        }
+
+        // If matches then confirm.
+        if (mb_strpos($output, $messages['message']) === 0) {
+            $this->webDriver->debug($messages['confirmation']);
+            $input = new InputStream();
+            $process->setInput($input);
+            // Send confirmation.
+            $input->write('y');
+            $process->start();
+            sleep(1);
+            $input->close();
+            $process->stop();
+        } else {
+            $this->webDriver->debug($messages['negation']);
+        }
+    }
+
+    /**55
+     * Generate a 16 character long hexadecimal password
+     *
+     * @return string
+     */
+    private function generatePassword(): string
+    {
+        try {
+            return bin2hex(random_bytes(8));
+        } catch (\Exception $e) {
+            return '';
+        }
     }
 }

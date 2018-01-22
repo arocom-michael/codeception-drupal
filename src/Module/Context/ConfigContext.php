@@ -77,7 +77,6 @@ class ConfigContext extends BaseContext
     public function cleanConfig()
     {
         foreach ($this->drupalConfiguration as $configName => $keyValue) {
-            /** @var $keyValue array<string, mixed> */
             foreach ($keyValue as $key => $value) {
                 $drushArguments = [$configName, $key, $value];
                 $process = $this->drupalDrush->getDrush('config-set', $drushArguments, [], $this->drushAlias);

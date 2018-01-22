@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Codeception\Module\Context;
 
-use PHPUnit_Framework_AssertionFailedError;
+use PHPUnit\Framework\AssertionFailedError;
 
 /**
  * Provides the raw functionality for interacting with Drupal.
@@ -42,7 +42,7 @@ class RawDrupalContext extends BaseContext
             $this->webDriver->seeElement(DrupalExtension::SELECTORS_LOGGED_IN_SELECTOR);
 
             return true;
-        } catch (PHPUnit_Framework_AssertionFailedError $exception) {
+        } catch (AssertionFailedError $exception) {
             // This test may fail if the driver did not load any site yet.
         }
 
@@ -51,7 +51,7 @@ class RawDrupalContext extends BaseContext
             $this->webDriver->dontSeeElement(DrupalExtension::SELECTORS_LOGIN_FORM_SELECTOR);
 
             return true;
-        } catch (PHPUnit_Framework_AssertionFailedError $exception) {
+        } catch (AssertionFailedError $exception) {
             // This test may fail if the driver did not load any site yet.
         }
 
@@ -60,7 +60,7 @@ class RawDrupalContext extends BaseContext
             $this->webDriver->seeLink(DrupalExtension::TEXT_LOGO_OUT);
 
             return true;
-        } catch (PHPUnit_Framework_AssertionFailedError $exception) {
+        } catch (AssertionFailedError $exception) {
             // This test may fail if the driver did not load any site yet.
         }
 
