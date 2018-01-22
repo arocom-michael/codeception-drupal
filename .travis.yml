@@ -25,6 +25,7 @@ before_install:
 
 script:
   - vendor/bin/codecept run acceptance test.feature -vvv
+  - composer phpstan
 
 notifications:
   email: false
