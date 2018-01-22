@@ -214,4 +214,241 @@ class AcceptanceContext extends BaseContext
     {
         $this->webDriver->seeElement('.adminimal-admin-toolbar');
     }
+
+    /**
+     * Checks if the current page contains the given error message
+     *
+     * @param string $message
+     *   string The text to be checked
+     *
+     * @Then I should see the error message :message
+     * @Then I should see the error message containing :message
+     *
+     * @return void
+     */
+    public function assertErrorVisible(string $message)
+    {
+        $this->webDriver->see($message, '#error_message_selector');
+    }
+
+    /**
+     * Checks if the current page contains the given set of error messages
+     *
+     * @param TableNode $messages
+     *   array An array of texts to be checked
+     *
+     * @Then I should see the following error message
+     * @Then I should see the following error messages
+     *
+     * @return void
+     */
+    public function assertMultipleErrors(TableNode $messages) {
+        foreach ($messages->getHash() as $key => $value) {
+            $message = trim($value['error messages']);
+            $this->assertErrorVisible($message);
+        }
+    }
+
+    /**
+     * Checks if the current page does not contain the given error message
+     *
+     * @param string $message
+     *   string The text to be checked
+     *
+     * @Given I should not see the error message :message
+     * @Given I should not see the error message containing :message
+     *
+     * @return void
+     */
+    public function assertNotErrorVisible(string $message)
+    {
+        $this->webDriver->dontSee($message, '#error_message_selector');
+    }
+
+    /**
+     * Checks if the current page does not contain the given set error messages
+     *
+     * @param TableNode $messages
+     *   array An array of texts to be checked
+     *
+     * @Then I should not see the following error messages
+     *
+     * @return void
+     */
+    public function assertNotMultipleErrors(TableNode $messages)
+    {
+        foreach ($messages->getHash() as $key => $value) {
+            $message = trim($value['error messages']);
+            $this->assertNotErrorVisible($message);
+        }
+    }
+
+    /**
+     * Checks if the current page contains the given success message
+     *
+     * @param $message
+     *   string The text to be checked
+     *
+     * @Then I should see the success message :message
+     * @Then I should see the success message containing :message
+     *
+     * @return void
+     */
+    public function assertSuccessMessage(string $message)
+    {
+        $this->webDriver->see($message, '#success_message_selector');
+    }
+
+    /**
+     * Checks if the current page contains the given set of success messages
+     *
+     * @param TableNode $messages
+     *   array An array of texts to be checked
+     *
+     * @Then I should see the following success messages
+     *
+     * @return void
+     */
+    public function assertMultipleSuccessMessage(TableNode $messages)
+    {
+        foreach ($messages->getHash() as $key => $value) {
+            $message = trim($value['success messages']);
+            $this->assertSuccessMessage($message);
+        }
+    }
+
+    // @TODO
+    /**
+     * Checks if the current page does not contain the given set of success message
+     *
+     * @param string $message
+     *   string The text to be checked
+     *
+     * @Given I should not see the success message :message
+     * @Given I should not see the success message containing :message
+     *
+     * @return void
+     */
+    public function assertNotSuccessMessage(string $message)
+    {
+        $this->webDriver->dontSee($message, '#success_message_selector');
+    }
+
+    /**
+     * Checks if the current page does not contain the given set of success messages
+     *
+     * @param TableNode $messages
+     *   array An array of texts to be checked
+     *
+     * @Then I should not see the following success messages
+     *
+     * @return void
+     */
+    public function assertNotMultipleSuccessMessage(TableNode $messages)
+    {
+        foreach ($messages->getHash() as $key => $value) {
+            $message = trim($value['success messages']);
+            $this->assertNotSuccessMessage($message);
+        }
+    }
+
+    /**
+     * Checks if the current page contains the given warning message
+     *
+     * @param string $message
+     *   string The text to be checked
+     *
+     * @Then I should see the warning message :message
+     * @Then I should see the warning message containing :message
+     *
+     * @return void
+     */
+    public function assertWarningMessage(string $message)
+    {
+        $this->webDriver->see($message, '#warning_message_selector');
+    }
+
+    /**
+     * Checks if the current page contains the given set of warning messages
+     *
+     * @param TableNode $messages
+     *   array An array of texts to be checked
+     *
+     * @Then I should see the following warning messages
+     *
+     * @return void
+     */
+    public function assertMultipleWarningMessage(TableNode $messages)
+    {
+        foreach ($messages->getHash() as $key => $value) {
+            $message = trim($value['warning messages']);
+            $this->assertWarningMessage($message);
+        }
+    }
+
+    /**
+     * Checks if the current page does not contain the given set of warning message
+     *
+     * @param string $message
+     *   string The text to be checked
+     *
+     * @Given I should not see the warning message :message
+     * @Given I should not see the warning message containing :message
+     *
+     * @return void
+     */
+    public function assertNotWarningMessage($message)
+    {
+        $this->webDriver->dontSee($message, '#warning_message_selector');
+    }
+
+    /**
+     * Checks if the current page does not contain the given set of warning messages
+     *
+     * @param TableNode $messages
+     *   array An array of texts to be checked
+     *
+     * @Then I should not see the following warning messages
+     *
+     * @return void
+     */
+    public function assertNotMultipleWarningMessage(TableNode $messages)
+    {
+        foreach ($messages->getHash() as $key => $value) {
+            $message = trim($value['warning messages']);
+            $this->assertNotWarningMessage($message);
+        }
+    }
+
+    /**
+     * Checks if the current page contain the given message
+     *
+     * @param string $message
+     *   string The message to be checked
+     *
+     * @Then I should see the message :message
+     * @Then I should see the message containing :message
+     *
+     * @return void
+     */
+    public function assertMessage(string $message)
+    {
+        $this->webDriver->see($message, '#message_selector');
+    }
+
+    /**
+     * Checks if the current page does not contain the given message
+     *
+     * @param string $message
+     *   string The message to be checked
+     *
+     * @Then I should not see the message :message
+     * @Then I should not see the message containing :message
+     *
+     * @return void
+     */
+    public function assertNotMessage(string $message)
+    {
+        $this->webDriver->dontSee($message, '#message_selector');
+    }
 }
