@@ -173,8 +173,8 @@ class AcceptanceContext extends BaseContext
      */
     public function iShouldSeeThePlainTextInTable(TableNode $tableNode)
     {
-        foreach ($tableNode->getRowsHash() as $field => $value) {
-            $this->webDriver->see($value);
+        foreach ($tableNode->getRows() as $row) {
+            $this->webDriver->see($row[0]);
         }
     }
 
