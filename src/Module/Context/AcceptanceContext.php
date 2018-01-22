@@ -189,4 +189,29 @@ class AcceptanceContext extends BaseContext
         $link = $this->webDriver->grabAttributeFrom($selector, 'href');
         $this->webDriver->amOnPage($link);
     }
+
+    /**
+     * @param string $locale
+     * The locale as string, example: 'nl-nl'.
+     *
+     * @Given I am on the frontpage of the locale :locale
+     *
+     * @return void
+     */
+    public function iAmOnTheFrontpageOfTheLocale(string $locale)
+    {
+        $this->webDriver->amOnPage("/{$locale}");
+    }
+
+    /**
+     * Check if admin toolbar exists.
+     *
+     * @Then I should have an Admin-Toolbar
+     *
+     * @return void
+     */
+    public function iShouldHaveAnAdminToolbar()
+    {
+        $this->webDriver->seeElement('.adminimal-admin-toolbar');
+    }
 }
