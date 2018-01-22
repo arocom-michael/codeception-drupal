@@ -28,6 +28,7 @@ class BatchContext extends BaseContext
      * @Given I wait for the batch job to finish
      *
      * @return void
+     *
      * @throws \Exception
      */
     public function waitForTheBatchJobToFinish()

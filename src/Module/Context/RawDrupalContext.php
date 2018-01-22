@@ -21,6 +21,8 @@ class RawDrupalContext extends BaseContext
      * Logs the current user out.
      * @Given I logout
      *
+     * @return void
+     *
      * @TODO Check if the step is necessary
      */
     public function logout()

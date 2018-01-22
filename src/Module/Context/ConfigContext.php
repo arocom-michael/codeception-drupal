@@ -72,6 +72,7 @@ class ConfigContext extends BaseContext
      * @Given I want to revert any changed config
      *
      * @return void
+     *
      * @throws \Codeception\Exception\ParseException
      */
     public function cleanConfig()
@@ -107,6 +108,8 @@ class ConfigContext extends BaseContext
      *
      * @Given I set the configuration item :name with the following keys
      *
+     * @return void
+     *
      * @throws \Codeception\Exception\ParseException
      */
     public function setComplexConfig(string $configName, TableNode $configurationTable)
@@ -127,6 +130,8 @@ class ConfigContext extends BaseContext
      *   Value to associate with identifier.
      *
      * @Given I set the configuration item :name with key :key to :value
+     *
+     * @return void
      *
      * @throws \Codeception\Exception\ParseException
      */
@@ -149,6 +154,8 @@ class ConfigContext extends BaseContext
      *   Identifier to store value in configuration.
      * @param mixed $value
      *   Value to associate with identifier.
+     *
+     * @return void
      *
      * @throws \Codeception\Exception\ParseException
      */
@@ -187,6 +194,9 @@ class ConfigContext extends BaseContext
      * @param \Symfony\Component\Process\Process $process
      *
      * @return string
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
      */
     private function getRunProcessOutput(Process $process): string
     {
@@ -214,8 +224,9 @@ class ConfigContext extends BaseContext
      * @param string $input Parsed YAML file,
      *   using Symfony\Component\Yaml\Yaml::parse($input).
      *
-     * @return array <string, string>
+     * @return array<string, string>
      *
+     * @throws \Symfony\Component\Yaml\Exception\ParseException
      * @throws \Codeception\Exception\ParseException
      */
     private function getSingularity(string $input): array
@@ -252,6 +263,8 @@ class ConfigContext extends BaseContext
      *
      * @return void
      *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
      * @throws \Codeception\Exception\ParseException
      */
     private function updateKeyInConfig(Process $process, string $output, array $messages)

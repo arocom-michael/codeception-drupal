@@ -48,6 +48,7 @@ class DrushContext extends BaseContext
      * Return the most recent drush command output.
      *
      * @return string
+     *
      * @throws \RuntimeException
      */
     public function readDrushOutput(): string
@@ -67,7 +68,12 @@ class DrushContext extends BaseContext
      * @Given I run drush :command
      * @Given I run drush :command command
      *
+     * @return void
+     *
      * @param string $command
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
      */
     public function assertDrushCommand(string $command)
     {
@@ -85,6 +91,10 @@ class DrushContext extends BaseContext
      *
      * @param string $command
      * @param string $arguments
+     *
+     * @return void
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
      */
     public function assertDrushCommandWithArgument(
         string $command,
@@ -106,6 +116,10 @@ class DrushContext extends BaseContext
      * @param string $command
      * @param string $arguments
      * @param string $options
+     *
+     * @return void
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
      */
     public function assertDrushCommandWithArgumentAndOptions(
         string $command,
@@ -125,6 +139,8 @@ class DrushContext extends BaseContext
      * @Then drush output should contain :output
      *
      * @param string $output
+     *
+     * @return void
      */
     public function assertDrushOutput(string $output)
     {
@@ -138,6 +154,8 @@ class DrushContext extends BaseContext
      * @Then drush output should match :regex
      *
      * @param string $regex
+     *
+     * @return void
      */
     public function assertDrushOutputMatches(string $regex)
     {
@@ -151,6 +169,8 @@ class DrushContext extends BaseContext
      * @Then drush output should not contain :output
      *
      * @param string $output
+     *
+     * @return void
      */
     public function drushOutputShouldNotContain(string $output)
     {
@@ -161,6 +181,9 @@ class DrushContext extends BaseContext
      * @param \Symfony\Component\Process\Process $process
      *
      * @return string
+     *
+     * @throws \Symfony\Component\Process\Exception\RuntimeException
+     * @throws \Symfony\Component\Process\Exception\LogicException
      */
     private function getRunProcessOutput(Process $process): string
     {

@@ -56,6 +56,8 @@ class BaseContext extends Module
      * @When I take a break
      * @When I smoke a cigarette
      * @Given I break
+     *
+     * @return void
      */
     public function pauseExecution()
     {
@@ -172,6 +174,7 @@ class BaseContext extends Module
      * @param string $argument
      *
      * @return array<string, string>
+     *
      * @throws \Codeception\Exception\ParseException
      */
     private function getAttributeSelector(string $argument): array
@@ -264,7 +267,7 @@ class BaseContext extends Module
      *
      * @param string $input
      *
-     * @return array<int, <string>
+     * @return array<int, string>
      */
     protected function getArguments(string $input): array
     {

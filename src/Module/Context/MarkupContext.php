@@ -30,6 +30,8 @@ class MarkupContext extends BaseContext
      * @param string $region
      *   The region in which the button should be found
      *
+     * @return void
+     *
      * @throws \Codeception\Exception\ParseException
      */
     public function assertRegionButton(string $button, string $region)
@@ -67,6 +69,8 @@ class MarkupContext extends BaseContext
      * @param string $tag
      * @param string $region
      *
+     * @return void
+     *
      * @throws \Exception
      */
     public function assertRegionElement(string $tag, string $region)
@@ -86,6 +90,8 @@ class MarkupContext extends BaseContext
      *
      * @param string $tag
      * @param string $region
+     *
+     * @return void
      *
      * @throws \Exception
      */
@@ -107,6 +113,8 @@ class MarkupContext extends BaseContext
      * @param string $text
      * @param string $tag
      * @param string $region
+     *
+     * @return void
      *
      * @throws \Exception
      */
@@ -132,6 +140,8 @@ class MarkupContext extends BaseContext
      * @param string $attribute
      * @param string $value
      * @param string $region
+     *
+     * @return void
      *
      * @throws \Exception
      *
@@ -162,6 +172,8 @@ class MarkupContext extends BaseContext
      * @param string $attribute
      * @param string $value
      * @param string $region
+     *
+     * @return void
      *
      * @throws \Exception
      */
@@ -202,6 +214,8 @@ class MarkupContext extends BaseContext
      * @param string $property
      * @param string $value
      * @param string $region
+     *
+     * @return void
      *
      * @throws \Codeception\Exception\ElementNotFound
      * @throws \Exception

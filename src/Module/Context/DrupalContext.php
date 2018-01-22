@@ -483,6 +483,9 @@ class DrupalContext extends BaseContext
      * @Given I create :user user with :email email and :password password
      *
      * @example drush user-create newuser --mail="person@example.com" --password="letmein"
+     *
+     * @return void
+     *
      * @throws \Symfony\Component\Process\Exception\RuntimeException
      * @throws \Symfony\Component\Process\Exception\LogicException
      */
@@ -495,8 +498,7 @@ class DrupalContext extends BaseContext
         ];
         $drushArguments = $this->getArguments($arguments);
         $drushOptions = $this->getArguments($options);
-        $process = $this->drupalDrush->getDrush($command, $drushArguments,
-          $drushOptions, $this->drushAlias);
+        $process = $this->drupalDrush->getDrush($command, $drushArguments, $drushOptions, $this->drushAlias);
         $this->webDriver->debug($this->getRunProcessOutput($process));
     }
 
@@ -535,7 +537,7 @@ class DrupalContext extends BaseContext
      *
      * @Given I get a login link for :user user with :locale locale
      *
-     * @exampledrush user-login ryan
+     * @example drush user-login ryan
      *
      * @return void
      *
@@ -754,7 +756,7 @@ class DrupalContext extends BaseContext
         }
     }
 
-    /**55
+    /**
      * Generate a 16 character long hexadecimal password
      *
      * @return string

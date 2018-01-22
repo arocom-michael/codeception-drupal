@@ -28,6 +28,8 @@ class MinkContext extends BaseContext
      * @Given I go to :url
      *
      * @param string $url
+     *
+     * @return void
      */
     public function visit(string $url)
     {
@@ -40,6 +42,8 @@ class MinkContext extends BaseContext
      * Example: And I reload the page
      *
      * @Given I reload the page
+     *
+     * @return void
      */
     public function reload()
     {
@@ -51,6 +55,8 @@ class MinkContext extends BaseContext
      * Example: When I move backward one page
      *
      * @When I move backward one page
+     *
+     * @return void
      */
     public function back()
     {
@@ -62,6 +68,8 @@ class MinkContext extends BaseContext
      * Example: And I move forward one page
      *
      * @When I move forward one page
+     *
+     * @return void
      */
     public function forward()
     {
@@ -76,6 +84,8 @@ class MinkContext extends BaseContext
      * @When I press :logIn
      *
      * @param string $buttonAttribute
+     *
+     * @return void
      *
      * @TODO
      */
@@ -92,6 +102,8 @@ class MinkContext extends BaseContext
      * @When I follow :linkAttribute
      *
      * @param string $linkAttribute
+     *
+     * @return void
      *
      * @TODO
      */
@@ -110,6 +122,8 @@ class MinkContext extends BaseContext
      *
      * @param string $field
      * @param string $value
+     *
+     * @return void
      */
     public function fillField(string $field, string $value)
     {
@@ -128,6 +142,8 @@ class MinkContext extends BaseContext
      * @When I fill in the following
      *
      * @param \Behat\Gherkin\Node\TableNode $fields
+     *
+     * @return void
      */
     public function fillFields(TableNode $fields)
     {
@@ -145,6 +161,8 @@ class MinkContext extends BaseContext
      *
      * @param string $select
      * @param string $option
+     *
+     * @return void
      */
     public function selectOption(string $option, string $select)
     {
@@ -161,6 +179,8 @@ class MinkContext extends BaseContext
      *
      * @param string $select
      * @param string $option
+     *
+     * @return void
      */
     public function additionallySelectOption(string $option, string $select)
     {
@@ -175,6 +195,8 @@ class MinkContext extends BaseContext
      * @When I check :option
      *
      * @param string $option
+     *
+     * @return void
      */
     public function checkOption(string $option)
     {
@@ -189,6 +211,8 @@ class MinkContext extends BaseContext
      * @When I uncheck :option
      *
      * @param string $option
+     *
+     * @return void
      */
     public function uncheckOption(string $option)
     {
@@ -204,6 +228,8 @@ class MinkContext extends BaseContext
      *
      * @param string $field
      * @param string $path
+     *
+     * @return void
      *
      * @throws \InvalidArgumentException
      *
@@ -223,6 +249,8 @@ class MinkContext extends BaseContext
      * @Then I should be on :page
      *
      * @param string $page
+     *
+     * @return void
      */
     public function assertPageAddress(string $page)
     {
@@ -235,6 +263,8 @@ class MinkContext extends BaseContext
      * Example: And I should be on the homepage
      *
      * @Then I should be on the homepage
+     *
+     * @return void
      */
     public function assertHomepage()
     {
@@ -250,6 +280,8 @@ class MinkContext extends BaseContext
      * @Then the url should match :pattern
      *
      * @param string $pattern
+     *
+     * @return void
      */
     public function assertUrlContains(string $pattern)
     {
@@ -264,6 +296,8 @@ class MinkContext extends BaseContext
      * @Then the response status code should be :code
      *
      * @param string $code
+     *
+     * @return void
      *
      * @throws \Codeception\Exception\ModuleConfigException
      */
@@ -283,6 +317,8 @@ class MinkContext extends BaseContext
      * @Then I should see :text
      *
      * @param string $text
+     *
+     * @return void
      */
     public function assertPageContainsText(string $text)
     {
@@ -297,6 +333,8 @@ class MinkContext extends BaseContext
      * @Then I should not see :text
      *
      * @param string $text
+     *
+     * @return void
      */
     public function assertPageNotContainsText(string $text)
     {
@@ -330,6 +368,8 @@ class MinkContext extends BaseContext
      *
      * @param string $pattern
      *
+     * @return void
+     *
      * @TODO Test logic
      */
     public function assertPageNotMatchesText(string $pattern)
@@ -352,6 +392,8 @@ class MinkContext extends BaseContext
      * @Then the response should contain :text
      *
      * @param string $text
+     *
+     * @return void
      */
     public function assertResponseContains(string $text)
     {
@@ -367,6 +409,8 @@ class MinkContext extends BaseContext
      * @Then the response should not contain :text
      *
      * @param string $text
+     *
+     * @return void
      */
     public function assertResponseNotContains(string $text)
     {
@@ -382,6 +426,8 @@ class MinkContext extends BaseContext
      *
      * @param string $element
      * @param string $text
+     *
+     * @return void
      */
     public function assertElementContainsText(string $text, string $element)
     {
@@ -398,6 +444,8 @@ class MinkContext extends BaseContext
      *
      * @param string $element
      * @param string $text
+     *
+     * @return void
      */
     public function assertElementNotContainsText(string $text, string $element)
     {
@@ -413,6 +461,8 @@ class MinkContext extends BaseContext
      *
      * @param string $element
      * @param string $value
+     *
+     * @return void
      *
      * @TODO Test logic
      */
@@ -433,6 +483,8 @@ class MinkContext extends BaseContext
      * @param string $element
      * @param string $value
      *
+     * @return void
+     *
      * @TODO Test logic
      */
     public function assertElementNotContains(string $element, string $value)
@@ -450,6 +502,8 @@ class MinkContext extends BaseContext
      * @Then I should see an :element element
      *
      * @param string $element
+     *
+     * @return void
      */
     public function assertElementOnPage(string $element)
     {
@@ -465,6 +519,8 @@ class MinkContext extends BaseContext
      * @Then I should not see an :element element
      *
      * @param string $element
+     *
+     * @return void
      */
     public function assertElementNotOnPage(string $element)
     {
@@ -480,6 +536,8 @@ class MinkContext extends BaseContext
      *
      * @param string $field
      * @param string $value
+     *
+     * @return void
      */
     public function assertFieldContains(string $field, string $value)
     {
@@ -495,6 +553,8 @@ class MinkContext extends BaseContext
      *
      * @param string $field
      * @param string $value
+     *
+     * @return void
      */
     public function assertFieldNotContains(string $field, string $value)
     {
@@ -511,6 +571,8 @@ class MinkContext extends BaseContext
      *
      * @param string $number
      * @param string $element
+     *
+     * @return void
      */
     public function assertNumElements(string $number, string $element)
     {
@@ -527,6 +589,8 @@ class MinkContext extends BaseContext
      * @Then the :checkbox checkbox is checked
      *
      * @param string $checkbox
+     *
+     * @return void
      */
     public function assertCheckboxChecked(string $checkbox)
     {
@@ -544,6 +608,8 @@ class MinkContext extends BaseContext
      * @Then the :checkbox checkbox is unchecked
      *
      * @param string $checkbox
+     *
+     * @return void
      */
     public function assertCheckboxNotChecked(string $checkbox)
     {
@@ -556,6 +622,8 @@ class MinkContext extends BaseContext
      * Example: And print current URL
      *
      * @Then print current URL
+     *
+     * @return void
      */
     public function printCurrentUrl()
     {
@@ -574,7 +642,10 @@ class MinkContext extends BaseContext
      *
      * @Then print last response
      *
+     * @return void
+     *
      * @TODO Test logic
+     * @throws \RuntimeException
      */
     public function printLastResponse()
     {
