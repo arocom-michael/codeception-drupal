@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace Codeception\Module\Context;
 
+use Behat\Gherkin\Node\TableNode;
 use Codeception\Util\HttpCode;
 
 /**
@@ -158,6 +159,23 @@ class AcceptanceContext extends BaseContext
     public function iShouldSeeThePlainText(string $text)
     {
         $this->webDriver->see($text);
+    }
+
+    /**
+     * @Then I should see the plain text in table
+     *
+     * @example Given I should see the plain text in table
+     *  | Sitemap: https://www.alphabet.com/de-de/sitemap.xml |
+     *
+     * @param \Behat\Gherkin\Node\TableNode $tableNode
+     *
+     * @return void
+     */
+    public function iShouldSeeThePlainTextInTable(TableNode $tableNode)
+    {
+        foreach ($tableNode->getRowsHash() as $field => $value) {
+            $this->webDriver->see($value);
+        }
     }
 
     /**
