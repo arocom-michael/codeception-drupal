@@ -148,6 +148,17 @@ class AcceptanceContext extends BaseContext
         $this->webDriver->click($css);
     }
 
+    /**
+     * @Then I should see the plain text :text
+     *
+     * @param string $text
+     *
+     * @return void
+     */
+    public function iShouldSeeThePlainText(string $text)
+    {
+        $this->webDriver->see($text);
+    }
 
     /**
      * @param string $selector
